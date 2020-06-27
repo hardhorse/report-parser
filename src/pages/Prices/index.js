@@ -134,7 +134,7 @@ const Prices = () => {
           const product = productItems.current[item];
 
           if (!product) {
-              return [...SHOPS.map(() => null)]
+              return undefined;
           }
           
           return [
@@ -142,7 +142,7 @@ const Prices = () => {
                   .map(item =>product[item] && product[item].value),
               ...SHOPS.map(shop => getProductPrice(product[shop]))
           ]
-        }).sort(item => item[1] === TABLET_TYPE ? 1 : -1);
+        }).filter(Boolean).sort(item => item[1] === TABLET_TYPE ? 1 : -1);
 
       const notebooks = productData.filter(item => item[1] !== TABLET_TYPE);
       const tablets = productData.filter(item => item[1] === TABLET_TYPE);
