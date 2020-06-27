@@ -6,6 +6,7 @@ import TextField from '@material-ui/core/TextField';
 import Container from '@material-ui/core/Container';
 import { makeStyles } from '@material-ui/core/styles';
 import CircularProgress from '@material-ui/core/CircularProgress';
+import Alert from '@material-ui/lab/Alert';
 import Typography from '@material-ui/core/Typography';
 import Box from '@material-ui/core/Box';
 import DenseTable from '../../components/Table'
@@ -25,6 +26,10 @@ import {
 const useStyles = makeStyles({
   root: {
     marginTop: 20
+  },
+  alert: {
+    marginTop: 10, 
+    marginBottom: 10, 
   },
 });
 
@@ -54,7 +59,7 @@ function CircularProgressWithLabel({className, ...props}) {
   );
 }
 
-async function fetchData(numbers, urlFuncion, setProgress , cb) {
+async function fetchData(numbers, urlFuncion, setProgress, setAlert, cb) {
   const data = []
   for (let i = 0; i < numbers.length; i++) {
     const item = numbers[i];
@@ -63,12 +68,17 @@ async function fetchData(numbers, urlFuncion, setProgress , cb) {
       url: urlFuncion(item),
       json: true,
     };
-    const body = await rp(options);
-    //waiting before sleep function executes using it synchronously
-    await sleep(2000);
-    setProgress(prevProgress => (prevProgress + 1));
-    data.push(body);
-    cb(body, item);
+    try {
+      const body = await rp(options);
+      //waiting before sleep function executes using it synchronously
+      await sleep(2000);
+      setProgress(prevProgress => (prevProgress + 1));
+      data.push(body);
+      cb(body, item);
+    } catch (e) {
+      console.log('Failed to fetch data');
+      setAlert(item);
+    }
   }
 
   return data;
@@ -79,35 +89,46 @@ const Prices = () => {
   const [isReady, setIsReady] = useState(false);
   const [inProgress, setInProgress] = useState(false);
   const [progress, setProgress] = React.useState(0);
+  const [alerts, setAlerts] = React.useState([]);
   const classes = useStyles();
   const table = useRef(null);
   const productItems = useRef({});
 
+  const setAlert = msg => id => {
+    setAlerts(prevAlerts => [...prevAlerts, `${msg} ${id}`]);
+  }
   const handleTextareaChange = e => {
     setNumbers(e.target.value);
   };
 
-  const splittedNumbers = numbers.split(/\n/);
+  const splittedNumbers = numbers.split(/\n/).filter(Boolean);
 
   const handleGetResults = async () => {
-
+    setAlerts([]);
     setIsReady(false);
     setInProgress(true);
 
     if(splittedNumbers.length >= 1) {
-      await fetchData(splittedNumbers, getApiUrl, setProgress, (data, item) => {
+      await fetchData(splittedNumbers, getApiUrl, setProgress, setAlert('Не получилось загрузить данные по ценам для'), (data, item) => {
         if (data.positions) {
           const availableShops = getShops(data.positions.primary);
 
           productItems.current[item] = { ...productItems.current[item], ...availableShops};
         }
       });
-      await fetchData(splittedNumbers, getDetailsUrl, setProgress, (data, item) => {
+      await fetchData(splittedNumbers, getDetailsUrl, setProgress, setAlert('Не получилось загрузить данные по товару для'), (data, item) => {
         productItems.current[item] = {
           ...productItems.current[item],
           ...getProductData(data)
         }
       });
+
+      if (!Object.keys(productItems.current).length) {
+        setIsReady(true);
+        setInProgress(false);
+        setProgress(0);
+        return;
+      }
 
       const productData = splittedNumbers.map(item => {
           const product = productItems.current[item];
@@ -155,6 +176,9 @@ const Prices = () => {
           <Button onClick={handleGetResults}>Найти</Button>
           {isReady && table.current && <Button onClick={download}>Скачать XLS</Button>}
         </ButtonGroup>
+        {
+          Boolean(alerts.length) && alerts.map((item, index) => <Alert className={classes.alert} key={index} severity="warning">{item}</Alert>)
+        }
         </Container>
         {inProgress && <CircularProgressWithLabel className={classes.root} value={(progress / (splittedNumbers.length*2)) * 100} />}
         {isReady && !inProgress && table.current && table.current.map((item, index) => <DenseTable data={item} key={index} />) }
