@@ -6,6 +6,8 @@ import TextField from '@material-ui/core/TextField';
 import Container from '@material-ui/core/Container';
 import { makeStyles } from '@material-ui/core/styles';
 import CircularProgress from '@material-ui/core/CircularProgress';
+import Typography from '@material-ui/core/Typography';
+import Box from '@material-ui/core/Box';
 import DenseTable from '../../components/Table'
 import { downloadXLSX } from "../../helpers";
 import { TABLET_TYPE, LAPTOP_TYPE, SHOPS } from './constants';
@@ -30,7 +32,29 @@ function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-async function fetchData(numbers, urlFuncion, cb) {
+function CircularProgressWithLabel({className, ...props}) {
+  return (
+    <Box position="relative" className={className} display="inline-flex">
+      <CircularProgress variant="static" {...props} />
+      <Box
+        top={0}
+        left={0}
+        bottom={0}
+        right={0}
+        position="absolute"
+        display="flex"
+        alignItems="center"
+        justifyContent="center"
+      >
+        <Typography variant="caption" component="div" color="textSecondary">{`${Math.round(
+          props.value,
+        )}%`}</Typography>
+      </Box>
+    </Box>
+  );
+}
+
+async function fetchData(numbers, urlFuncion, setProgress , cb) {
   const data = []
   for (let i = 0; i < numbers.length; i++) {
     const item = numbers[i];
@@ -40,9 +64,9 @@ async function fetchData(numbers, urlFuncion, cb) {
       json: true,
     };
     const body = await rp(options);
-    console.log(`Awaiting 2s ...`);
     //waiting before sleep function executes using it synchronously
     await sleep(2000);
+    setProgress(prevProgress => (prevProgress + 1));
     data.push(body);
     cb(body, item);
   }
@@ -54,6 +78,7 @@ const Prices = () => {
   const [numbers, setNumbers] = useState("");
   const [isReady, setIsReady] = useState(false);
   const [inProgress, setInProgress] = useState(false);
+  const [progress, setProgress] = React.useState(0);
   const classes = useStyles();
   const table = useRef(null);
   const productItems = useRef({});
@@ -62,21 +87,22 @@ const Prices = () => {
     setNumbers(e.target.value);
   };
 
+  const splittedNumbers = numbers.split(/\n/);
+
   const handleGetResults = async () => {
 
     setIsReady(false);
     setInProgress(true);
-    const splittedNumbers = numbers.split(/\n/);
 
     if(splittedNumbers.length >= 1) {
-      await fetchData(splittedNumbers, getApiUrl, (data, item) => {
+      await fetchData(splittedNumbers, getApiUrl, setProgress, (data, item) => {
         if (data.positions) {
           const availableShops = getShops(data.positions.primary);
 
           productItems.current[item] = { ...productItems.current[item], ...availableShops};
         }
       });
-      await fetchData(splittedNumbers, getDetailsUrl, (data, item) => {
+      await fetchData(splittedNumbers, getDetailsUrl, setProgress, (data, item) => {
         productItems.current[item] = {
           ...productItems.current[item],
           ...getProductData(data)
@@ -105,6 +131,7 @@ const Prices = () => {
 
       setIsReady(true);
       setInProgress(false);
+      setProgress(0);
     }
   };
 
@@ -129,7 +156,7 @@ const Prices = () => {
           {isReady && table.current && <Button onClick={download}>Скачать XLS</Button>}
         </ButtonGroup>
         </Container>
-        {inProgress && <CircularProgress className={classes.root} />}
+        {inProgress && <CircularProgressWithLabel className={classes.root} value={(progress / (splittedNumbers.length*2)) * 100} />}
         {isReady && !inProgress && table.current && table.current.map((item, index) => <DenseTable data={item} key={index} />) }
     </>
   );
