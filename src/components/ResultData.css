@@ -1,0 +1,20 @@
+* {
+    box-sizing: border-box;
+}
+
+.sku-row {
+    display: table-row;
+}
+.sku-cell {
+    display: table-cell;
+    border: 1px solid;
+}
+
+.sku-cell--name,
+.sku-cell--header {
+    width: 300px;
+}
+
+.sku-cell--value {
+    width: 150px
+}

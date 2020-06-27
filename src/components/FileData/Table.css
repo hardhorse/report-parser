@@ -1,0 +1,16 @@
+.table-row {
+    display: table-row;
+}
+.table-cell {
+    display: table-cell;
+    width: 15%;
+    border: 1px solid black;
+}
+
+.table-cell.active-column {
+    background: rgba(237,231,160, .5);
+}
+
+.table-row.active-row {
+    background: rgb(124, 173, 105);
+}
