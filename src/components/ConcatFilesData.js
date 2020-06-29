@@ -16,7 +16,7 @@ const ResultData = ({ data, files }) => {
         result.push(skuResult)
     })
 
-    const download = () => downloadXLSX(result, 'Склеенные отчеты', 'concated')
+    const download = () => downloadXLSX([result], 'Склеенные отчеты', 'concated')
 
     return (
       <div>

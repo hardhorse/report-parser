@@ -30,7 +30,7 @@ const ResultData = ({ data, files }) => {
     result.push(skuResult);
   });
 
-  const download = () => downloadXLSX(result);
+  const download = () => downloadXLSX([result]);
 
   return (
     <div>
