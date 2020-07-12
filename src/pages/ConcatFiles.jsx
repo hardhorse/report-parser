@@ -45,7 +45,7 @@ const MainPage = () => {
     files.forEach(({ name: fileName, data }) => {
       const {firstRow, lastRow, sales, productData, rest, productDescription, customer} = fileData[fileName];
 
-      const slicedRows = data.slice(firstRow.row, lastRow.row);
+      const slicedRows = data.slice(firstRow.row, lastRow.row + 1);
       // go per rows
       slicedRows.forEach(row => {
         const elementName = row[productDescription.column];
@@ -63,6 +63,16 @@ const MainPage = () => {
         const currentSales = sales ? Number(row[sales.column]) : 0;
         const elementRest = !needToSumData ? (restResult || currentRest) : (restResult + currentRest);
         const elementSales = !needToSumData ? (salesResult || currentSales) : (salesResult + currentSales);
+
+        elementSku[0] === 'ZA4G0055UA' && console.log({
+          elementSku,
+          elementSales,
+          elementRest,
+          currentRest,
+          currentSales,
+          restResult,
+          salesResult
+        })
 
         resultData[elementSku] = {
           ...resultData[elementSku],

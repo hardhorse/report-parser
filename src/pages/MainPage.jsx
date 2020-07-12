@@ -43,7 +43,7 @@ const MainPage = () => {
 
     files.forEach(({ name: fileName, data }) => {
       const {firstRow, lastRow, sales, productData, productDescription, rest} = fileData[fileName]
-      const slicedRows = data.slice(firstRow.row, lastRow.row);
+      const slicedRows = data.slice(firstRow.row, lastRow.row + 1);
       // go per rows
       slicedRows.forEach(row => {
         const elementName = row[(productDescription || productData).column];
