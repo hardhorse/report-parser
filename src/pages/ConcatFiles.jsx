@@ -64,16 +64,6 @@ const MainPage = () => {
         const elementRest = !needToSumData ? (restResult || currentRest) : (restResult + currentRest);
         const elementSales = !needToSumData ? (salesResult || currentSales) : (salesResult + currentSales);
 
-        elementSku[0] === 'ZA4G0055UA' && console.log({
-          elementSku,
-          elementSales,
-          elementRest,
-          currentRest,
-          currentSales,
-          restResult,
-          salesResult
-        })
-
         resultData[elementSku] = {
           ...resultData[elementSku],
           name: elementName || elementSku,
